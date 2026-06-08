@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# GCP / secrets
+*.json
+service-account*.json
+.env
+.env.*
+!.env.example
+
+# Model artifacts
+models/*.pkl
+models/*.h5
+*.ckpt
+
+# Notebooks
+.ipynb_checkpoints/
