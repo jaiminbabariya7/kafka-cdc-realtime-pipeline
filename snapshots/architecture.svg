@@ -1,0 +1,113 @@
+<svg viewBox="0 0 980 520" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="980" height="520" fill="#0d1117" rx="12"/>
+  <text x="490" y="34" text-anchor="middle" font-size="17" font-weight="bold" fill="#e6edf3">Kafka CDC Realtime Pipeline — Debezium + Kafka + BigQuery</text>
+
+  <!-- Source DB -->
+  <rect x="20" y="55" width="145" height="160" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text x="92" y="75" text-anchor="middle" font-size="11" fill="#8b949e" font-weight="bold">SOURCE DB</text>
+  <rect x="30" y="83" width="125" height="28" rx="5" fill="#21262d" stroke="#30363d"/>
+  <text x="92" y="101" text-anchor="middle" font-size="10" fill="#58a6ff">PostgreSQL 15</text>
+  <text x="92" y="127" text-anchor="middle" font-size="9" fill="#8b949e">wal_level=logical</text>
+  <text x="92" y="143" text-anchor="middle" font-size="9" fill="#8b949e">Tables: orders</text>
+  <text x="92" y="158" text-anchor="middle" font-size="9" fill="#8b949e">customers, products</text>
+  <text x="92" y="173" text-anchor="middle" font-size="9" fill="#8b949e">order_items</text>
+  <rect x="30" y="186" width="125" height="20" rx="4" fill="#21262d" stroke="#238636"/>
+  <text x="92" y="200" text-anchor="middle" font-size="9" fill="#3fb950">Publication: debezium_pub</text>
+
+  <!-- Arrow 1 -->
+  <line x1="165" y1="135" x2="192" y2="135" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="178" y="128" text-anchor="middle" font-size="8" fill="#8b949e">WAL</text>
+
+  <!-- Debezium -->
+  <rect x="192" y="55" width="155" height="160" rx="8" fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+  <text x="270" y="75" text-anchor="middle" font-size="11" fill="#e3b341" font-weight="bold">DEBEZIUM CDC</text>
+  <rect x="202" y="83" width="135" height="28" rx="5" fill="#21262d" stroke="#d29922"/>
+  <text x="270" y="101" text-anchor="middle" font-size="10" fill="#e3b341">Kafka Connect 2.5</text>
+  <text x="270" y="127" text-anchor="middle" font-size="9" fill="#8b949e">postgres-cdc-source</text>
+  <text x="270" y="143" text-anchor="middle" font-size="9" fill="#8b949e">plugin: pgoutput</text>
+  <text x="270" y="158" text-anchor="middle" font-size="9" fill="#8b949e">snapshot.mode: initial</text>
+  <text x="270" y="173" text-anchor="middle" font-size="9" fill="#8b949e">transform: ExtractNewRecordState</text>
+  <rect x="202" y="186" width="135" height="20" rx="4" fill="#21262d" stroke="#d29922"/>
+  <text x="270" y="200" text-anchor="middle" font-size="9" fill="#e3b341">op: c/u/d/r captured</text>
+
+  <!-- Arrow 2 -->
+  <line x1="347" y1="135" x2="374" y2="135" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Kafka -->
+  <rect x="374" y="55" width="155" height="160" rx="8" fill="#161b22" stroke="#ff7b72" stroke-width="1.5"/>
+  <text x="452" y="75" text-anchor="middle" font-size="11" fill="#ff7b72" font-weight="bold">APACHE KAFKA</text>
+  <rect x="384" y="83" width="135" height="28" rx="5" fill="#21262d" stroke="#ff7b72"/>
+  <text x="452" y="101" text-anchor="middle" font-size="10" fill="#ff7b72">Confluent Platform 7.5</text>
+  <text x="452" y="122" text-anchor="middle" font-size="9" fill="#8b949e">Topics (3 partitions each):</text>
+  <text x="452" y="137" text-anchor="middle" font-size="9" fill="#8b949e">cdc.public.orders</text>
+  <text x="452" y="152" text-anchor="middle" font-size="9" fill="#8b949e">cdc.public.customers</text>
+  <text x="452" y="167" text-anchor="middle" font-size="9" fill="#8b949e">cdc.public.products</text>
+  <text x="452" y="182" text-anchor="middle" font-size="9" fill="#8b949e">cdc.public.order_items</text>
+  <rect x="384" y="190" width="135" height="17" rx="4" fill="#21262d" stroke="#30363d"/>
+  <text x="452" y="202" text-anchor="middle" font-size="9" fill="#6e7681">Schema Registry + Kafka UI</text>
+
+  <!-- Arrow 3 (to consumers) -->
+  <line x1="529" y1="110" x2="556" y2="110" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="529" y1="160" x2="556" y2="230" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- Consumers block -->
+  <rect x="556" y="55" width="175" height="110" rx="8" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="643" y="75" text-anchor="middle" font-size="11" fill="#58a6ff" font-weight="bold">CDC CONSUMER</text>
+  <text x="643" y="92" text-anchor="middle" font-size="9" fill="#8b949e">cdc_consumer.py</text>
+  <text x="643" y="107" text-anchor="middle" font-size="9" fill="#8b949e">Confluent Kafka Python</text>
+  <text x="643" y="122" text-anchor="middle" font-size="9" fill="#8b949e">batch size: 500 rows</text>
+  <text x="643" y="137" text-anchor="middle" font-size="9" fill="#8b949e">exactly-once via manual commit</text>
+  <text x="643" y="152" text-anchor="middle" font-size="9" fill="#8b949e">SIGTERM graceful shutdown</text>
+
+  <rect x="556" y="188" width="175" height="90" rx="8" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="643" y="207" text-anchor="middle" font-size="11" fill="#bc8cff" font-weight="bold">STREAM PROCESSOR</text>
+  <text x="643" y="224" text-anchor="middle" font-size="9" fill="#8b949e">stream_processor.py</text>
+  <text x="643" y="239" text-anchor="middle" font-size="9" fill="#8b949e">30s tumbling windows</text>
+  <text x="643" y="254" text-anchor="middle" font-size="9" fill="#8b949e">revenue, order counts</text>
+  <text x="643" y="269" text-anchor="middle" font-size="9" fill="#8b949e">top-5 products per window</text>
+
+  <!-- Arrow 4 (to BigQuery) -->
+  <line x1="731" y1="110" x2="758" y2="110" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="731" y1="233" x2="758" y2="200" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- BigQuery Sink -->
+  <rect x="758" y="55" width="200" height="220" rx="8" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="858" y="75" text-anchor="middle" font-size="11" fill="#3fb950" font-weight="bold">BIGQUERY (CDC RAW)</text>
+  <rect x="768" y="83" width="180" height="22" rx="4" fill="#21262d" stroke="#30363d"/>
+  <text x="858" y="98" text-anchor="middle" font-size="9" fill="#8b949e">dataset: cdc_raw</text>
+  <text x="858" y="120" text-anchor="middle" font-size="9" fill="#3fb950">cdc_raw.orders</text>
+  <text x="858" y="136" text-anchor="middle" font-size="9" fill="#3fb950">cdc_raw.customers</text>
+  <text x="858" y="152" text-anchor="middle" font-size="9" fill="#3fb950">cdc_raw.products</text>
+  <text x="858" y="168" text-anchor="middle" font-size="9" fill="#3fb950">cdc_raw.order_items</text>
+  <text x="858" y="188" text-anchor="middle" font-size="9" fill="#58a6ff">streaming_metrics</text>
+  <text x="858" y="204" text-anchor="middle" font-size="9" fill="#6e7681">(30s window aggregates)</text>
+  <rect x="768" y="212" width="180" height="22" rx="4" fill="#21262d" stroke="#30363d"/>
+  <text x="858" y="227" text-anchor="middle" font-size="9" fill="#8b949e">Partitioned by event date</text>
+  <rect x="768" y="238" width="180" height="28" rx="4" fill="#21262d" stroke="#30363d"/>
+  <text x="858" y="253" text-anchor="middle" font-size="9" fill="#8b949e">+_cdc_op, _cdc_ts_ms audit cols</text>
+  <text x="858" y="268" text-anchor="middle" font-size="9" fill="#6e7681">insert_rows_json streaming API</text>
+
+  <!-- BigQuery Sink connector path -->
+  <rect x="374" y="250" width="155" height="55" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="452" y="268" text-anchor="middle" font-size="10" fill="#8b949e" font-weight="bold">BQ Sink Connector</text>
+  <text x="452" y="284" text-anchor="middle" font-size="9" fill="#6e7681">(optional: Kafka Connect</text>
+  <text x="452" y="296" text-anchor="middle" font-size="9" fill="#6e7681">→ BigQuery direct)</text>
+  <line x1="452" y1="215" x2="452" y2="250" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#a)"/>
+
+  <!-- Infrastructure row -->
+  <rect x="20" y="380" width="940" height="55" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="490" y="400" text-anchor="middle" font-size="11" fill="#58a6ff" font-weight="bold">Infrastructure</text>
+  <text x="160"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">Docker Compose (local dev)</text>
+  <text x="360"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">Terraform (GCP: Cloud Run + BQ)</text>
+  <text x="560"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">Kafka UI (monitoring)</text>
+  <text x="750"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">pytest (unit tests)</text>
+  <text x="490"  y="428" text-anchor="middle" font-size="9" fill="#6e7681">Postgres 15 | Kafka 7.5 | Debezium 2.5 | Schema Registry | Python 3.11</text>
+
+  <defs>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+
+  <text x="490" y="500" text-anchor="middle" font-size="10" fill="#6e7681">Stack: Debezium 2.5 | Apache Kafka 3.5 | Kafka Connect | Python 3.11 | Google BigQuery | Cloud Run | Terraform</text>
+</svg>
