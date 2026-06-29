@@ -1,0 +1,24 @@
+{
+  "name": "bigquery-cdc-sink",
+  "config": {
+    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+    "tasks.max": "3",
+    "topics.regex": "cdc\\.public\\..*",
+    "project": "${env:GCP_PROJECT_ID}",
+    "defaultDataset": "${env:BQ_CDC_DATASET}",
+    "keyfile": "${env:GOOGLE_APPLICATION_CREDENTIALS}",
+    "sanitizeTopics": "true",
+    "autoCreateTables": "true",
+    "autoUpdateSchemas": "true",
+    "allowNewBigQueryFields": "true",
+    "allowBigQueryRequiredFieldRelaxation": "true",
+    "upsertEnabled": "true",
+    "deleteEnabled": "true",
+    "mergeIntervalMs": "10000",
+    "bufferSize": "100000",
+    "maxWriteSize": "10000",
+    "tableWriteWait": "1000",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+  }
+}
