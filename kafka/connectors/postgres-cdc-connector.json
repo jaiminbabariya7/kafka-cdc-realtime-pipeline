@@ -1,0 +1,31 @@
+{
+  "name": "postgres-cdc-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "${env:POSTGRES_HOST}",
+    "database.port": "5432",
+    "database.user": "${env:POSTGRES_USER}",
+    "database.password": "${env:POSTGRES_PASSWORD}",
+    "database.dbname": "${env:POSTGRES_DB}",
+    "database.server.name": "ecommerce",
+    "plugin.name": "pgoutput",
+    "publication.autocreate.mode": "filtered",
+    "table.include.list": "public.orders,public.customers,public.products,public.order_items",
+    "slot.name": "debezium_ecommerce",
+    "topic.prefix": "cdc",
+    "topic.creation.default.replication.factor": "1",
+    "topic.creation.default.partitions": "3",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter.schemas.enable": "true",
+    "heartbeat.interval.ms": "30000",
+    "snapshot.mode": "initial",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "transforms.unwrap.add.fields": "op,source.ts_ms,source.table"
+  }
+}
