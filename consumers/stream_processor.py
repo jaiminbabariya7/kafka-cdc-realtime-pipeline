@@ -11,18 +11,33 @@ from __future__ import annotations
 import json, logging, os, signal, time
 from collections import defaultdict
 from datetime import datetime, timezone
-from confluent_kafka import Consumer, KafkaError
+from functools import lru_cache
+from confluent_kafka import Consumer
 from google.cloud import bigquery
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("cdc.processor")
 
-PROJECT_ID  = os.environ["GCP_PROJECT_ID"]
-BQ_DATASET  = os.getenv("BQ_CDC_DATASET", "cdc_raw")
-KAFKA_BROKERS = os.environ["KAFKA_BOOTSTRAP_SERVERS"]
-FLUSH_SECS  = int(os.getenv("FLUSH_INTERVAL_SECS", "30"))
 
-bq = bigquery.Client(project=PROJECT_ID)
+def project_id() -> str:
+    return os.environ["GCP_PROJECT_ID"]
+
+
+def bq_dataset() -> str:
+    return os.getenv("BQ_CDC_DATASET", "cdc_raw")
+
+
+def kafka_brokers() -> str:
+    return os.environ["KAFKA_BOOTSTRAP_SERVERS"]
+
+
+def flush_secs() -> int:
+    return int(os.getenv("FLUSH_INTERVAL_SECS", "30"))
+
+
+@lru_cache(maxsize=1)
+def bq_client() -> bigquery.Client:
+    return bigquery.Client(project=project_id())
 
 
 class RollingWindow:
@@ -55,7 +70,7 @@ class RollingWindow:
         return {
             "window_start":   self.window_start.isoformat(),
             "window_end":     datetime.now(timezone.utc).isoformat(),
-            "window_secs":    FLUSH_SECS,
+            "window_secs":    flush_secs(),
             "total_revenue":  round(self.total_revenue, 2),
             "order_count":    self.order_count,
             "top_products":   json.dumps([{"product_id": p, "count": c} for p, c in top_products]),
@@ -67,8 +82,8 @@ def flush(window: RollingWindow) -> None:
     if window.order_count == 0:
         return
     row      = window.to_bq_row()
-    bq_table = f"{PROJECT_ID}.{BQ_DATASET}.streaming_metrics"
-    errors   = bq.insert_rows_json(bq_table, [row])
+    bq_table = f"{project_id()}.{bq_dataset()}.streaming_metrics"
+    errors   = bq_client().insert_rows_json(bq_table, [row])
     if errors:
         logger.error("BQ flush errors: %s", errors)
     else:
@@ -77,7 +92,7 @@ def flush(window: RollingWindow) -> None:
 
 def run() -> None:
     conf = {
-        "bootstrap.servers": KAFKA_BROKERS,
+        "bootstrap.servers": kafka_brokers(),
         "group.id":          "cdc-stream-processor",
         "auto.offset.reset": "latest",
         "enable.auto.commit": True,
@@ -86,6 +101,7 @@ def run() -> None:
     consumer.subscribe(["cdc.public.orders"])
     window  = RollingWindow()
     running = True
+    interval = flush_secs()
     last_flush = time.monotonic()
 
     def _shutdown(sig, frame):
@@ -105,7 +121,7 @@ def run() -> None:
                 except Exception as exc:
                     logger.warning("Parse error: %s", exc)
 
-            if time.monotonic() - last_flush >= FLUSH_SECS:
+            if time.monotonic() - last_flush >= interval:
                 flush(window)
                 window.reset()
                 last_flush = time.monotonic()

@@ -24,7 +24,8 @@ htmlcov/
 *.DS_Store
 
 # GCP / secrets
-*.json
+gcp-key*.json
+credentials*.json
 service-account*.json
 .env
 .env.*

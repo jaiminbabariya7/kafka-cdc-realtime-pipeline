@@ -80,6 +80,7 @@ cp .env.example .env  # Fill in credentials
 cd docker && docker-compose up -d
 
 # 4. Register the Debezium connector (wait ~30s for Kafka Connect to start)
+cd ..
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
   -d @kafka/connectors/postgres-cdc-connector.json

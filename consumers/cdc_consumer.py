@@ -5,15 +5,17 @@ Consumes Debezium CDC events from Kafka topics (cdc.public.*),
 transforms them into BigQuery-compatible records, and streams
 inserts/updates/deletes into the BigQuery raw CDC dataset.
 
-Supports exactly-once semantics via Kafka consumer group offsets
-committed only after successful BigQuery write.
+Provides at-least-once delivery: Kafka consumer group offsets are
+committed only after every pending batch has been written to BigQuery.
 
 Usage:
     python consumers/cdc_consumer.py --tables orders,customers,products
 """
 from __future__ import annotations
-import argparse, json, logging, os, signal, sys
+import argparse, json, logging, os, signal
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from google.cloud import bigquery
@@ -21,12 +23,26 @@ from google.cloud import bigquery
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("cdc.consumer")
 
-PROJECT_ID  = os.environ["GCP_PROJECT_ID"]
-BQ_DATASET  = os.getenv("BQ_CDC_DATASET", "cdc_raw")
-KAFKA_BROKERS = os.environ["KAFKA_BOOTSTRAP_SERVERS"]
-GROUP_ID    = os.getenv("KAFKA_GROUP_ID", "cdc-bq-consumer")
 
-BQ_CLIENT   = bigquery.Client(project=PROJECT_ID)
+def project_id() -> str:
+    return os.environ["GCP_PROJECT_ID"]
+
+
+def bq_dataset() -> str:
+    return os.getenv("BQ_CDC_DATASET", "cdc_raw")
+
+
+def kafka_brokers() -> str:
+    return os.environ["KAFKA_BOOTSTRAP_SERVERS"]
+
+
+def group_id() -> str:
+    return os.getenv("KAFKA_GROUP_ID", "cdc-bq-consumer")
+
+
+@lru_cache(maxsize=1)
+def bq_client() -> bigquery.Client:
+    return bigquery.Client(project=project_id())
 
 
 @dataclass
@@ -46,10 +62,16 @@ def parse_debezium_event(raw: dict) -> CDCEvent | None:
         op      = payload.get("__op", payload.get("op", "r"))
         table   = payload.get("__source_table", "unknown")
         ts_ms   = payload.get("__source_ts_ms", 0)
+        if "after" in payload:
+            after = payload["after"]
+        else:
+            # Payload already flattened by ExtractNewRecordState: the row
+            # columns sit at the top level alongside the __-prefixed metadata.
+            after = {k: v for k, v in payload.items() if not k.startswith("_")} or None
         return CDCEvent(
             table=table, operation=op,
             before=payload.get("before"),
-            after=payload.get("after") or {k: v for k, v in payload.items() if not k.startswith("_")},
+            after=after,
             ts_ms=ts_ms, source=payload.get("source", {}),
         )
     except Exception as exc:
@@ -62,7 +84,7 @@ def to_bq_row(event: CDCEvent) -> dict[str, Any]:
     row = {
         "_cdc_op":        event.operation,
         "_cdc_ts_ms":     event.ts_ms,
-        "_cdc_processed_at": bigquery.enums.SqlTypeNames.TIMESTAMP,
+        "_cdc_processed_at": datetime.now(timezone.utc).isoformat(),
     }
     if event.after:
         row.update(event.after)
@@ -71,8 +93,8 @@ def to_bq_row(event: CDCEvent) -> dict[str, Any]:
 
 def stream_to_bigquery(rows: list[dict], table_name: str) -> None:
     """Stream a batch of rows to BigQuery using insert_rows_json."""
-    bq_table = f"{PROJECT_ID}.{BQ_DATASET}.{table_name}"
-    errors   = BQ_CLIENT.insert_rows_json(bq_table, rows)
+    bq_table = f"{project_id()}.{bq_dataset()}.{table_name}"
+    errors   = bq_client().insert_rows_json(bq_table, rows)
     if errors:
         logger.error("BigQuery insert errors for %s: %s", table_name, errors)
         raise RuntimeError(f"BigQuery insert failed: {errors}")
@@ -83,8 +105,8 @@ def run(tables: list[str]) -> None:
     topics = [f"cdc.public.{t}" for t in tables]
 
     conf = {
-        "bootstrap.servers": KAFKA_BROKERS,
-        "group.id":          GROUP_ID,
+        "bootstrap.servers": kafka_brokers(),
+        "group.id":          group_id(),
         "auto.offset.reset": "earliest",
         "enable.auto.commit": False,
         "max.poll.interval.ms": 300_000,
@@ -97,6 +119,14 @@ def run(tables: list[str]) -> None:
     batch: dict[str, list] = {t: [] for t in tables}
     BATCH_SIZE = int(os.getenv("BATCH_SIZE", "500"))
     running    = True
+
+    def flush_all() -> None:
+        """Write every pending batch to BigQuery, then commit offsets."""
+        for tname, rows in batch.items():
+            if rows:
+                stream_to_bigquery(rows, tname)
+                rows.clear()
+        consumer.commit(asynchronous=False)
 
     def _shutdown(sig, frame):
         nonlocal running
@@ -125,24 +155,20 @@ def run(tables: list[str]) -> None:
                 table_batch = batch.setdefault(event.table, [])
                 table_batch.append(to_bq_row(event))
 
-                # Flush when batch is full
+                # Flush when batch is full. Offsets cover every topic the
+                # consumer group reads, so all pending batches must be written
+                # before committing.
                 if len(table_batch) >= BATCH_SIZE:
-                    stream_to_bigquery(table_batch, event.table)
-                    table_batch.clear()
-                    consumer.commit(asynchronous=False)
+                    flush_all()
 
             except Exception as exc:
                 logger.error("Error processing message: %s", exc, exc_info=True)
 
     finally:
-        # Flush remaining rows
-        for tname, rows in batch.items():
-            if rows:
-                try:
-                    stream_to_bigquery(rows, tname)
-                except Exception as exc:
-                    logger.error("Final flush failed for %s: %s", tname, exc)
-        consumer.commit(asynchronous=False)
+        try:
+            flush_all()
+        except Exception as exc:
+            logger.error("Final flush failed: %s", exc)
         consumer.close()
         logger.info("Consumer shut down cleanly.")
 
