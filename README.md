@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![Terraform](https://img.shields.io/badge/Terraform-1.6-purple?logo=terraform)
 
-Production-grade Change Data Capture pipeline that streams every INSERT, UPDATE, and DELETE from a PostgreSQL e-commerce database into BigQuery in near real-time using Debezium, Apache Kafka, and Python consumers — with sub-second latency on the Kafka path and 30-second micro-batch windows for real-time aggregations.
+Change Data Capture pipeline that streams every INSERT, UPDATE, and DELETE from a PostgreSQL e-commerce database into BigQuery in near real-time using Debezium, Apache Kafka, and Python consumers — with sub-second latency on the Kafka path and 30-second micro-batch windows for real-time aggregations.
 
 ## Architecture
 
