@@ -56,7 +56,7 @@
   <text x="643" y="92" text-anchor="middle" font-size="9" fill="#8b949e">cdc_consumer.py</text>
   <text x="643" y="107" text-anchor="middle" font-size="9" fill="#8b949e">Confluent Kafka Python</text>
   <text x="643" y="122" text-anchor="middle" font-size="9" fill="#8b949e">batch size: 500 rows</text>
-  <text x="643" y="137" text-anchor="middle" font-size="9" fill="#8b949e">exactly-once via manual commit</text>
+  <text x="643" y="137" text-anchor="middle" font-size="9" fill="#8b949e">at-least-once (commit after write)</text>
   <text x="643" y="152" text-anchor="middle" font-size="9" fill="#8b949e">SIGTERM graceful shutdown</text>
 
   <rect x="556" y="188" width="175" height="90" rx="8" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
@@ -64,7 +64,7 @@
   <text x="643" y="224" text-anchor="middle" font-size="9" fill="#8b949e">stream_processor.py</text>
   <text x="643" y="239" text-anchor="middle" font-size="9" fill="#8b949e">30s tumbling windows</text>
   <text x="643" y="254" text-anchor="middle" font-size="9" fill="#8b949e">revenue, order counts</text>
-  <text x="643" y="269" text-anchor="middle" font-size="9" fill="#8b949e">top-5 products per window</text>
+  <text x="643" y="269" text-anchor="middle" font-size="9" fill="#8b949e">top-5 products (units) per window</text>
 
   <!-- Arrow 4 (to BigQuery) -->
   <line x1="731" y1="110" x2="758" y2="110" stroke="#8b949e" stroke-width="1.5" marker-end="url(#a)"/>
@@ -82,9 +82,9 @@
   <text x="858" y="188" text-anchor="middle" font-size="9" fill="#58a6ff">streaming_metrics</text>
   <text x="858" y="204" text-anchor="middle" font-size="9" fill="#6e7681">(30s window aggregates)</text>
   <rect x="768" y="212" width="180" height="22" rx="4" fill="#21262d" stroke="#30363d"/>
-  <text x="858" y="227" text-anchor="middle" font-size="9" fill="#8b949e">Partitioned by event date</text>
+  <text x="858" y="227" text-anchor="middle" font-size="9" fill="#8b949e">Partitioned by processing date</text>
   <rect x="768" y="238" width="180" height="28" rx="4" fill="#21262d" stroke="#30363d"/>
-  <text x="858" y="253" text-anchor="middle" font-size="9" fill="#8b949e">+_cdc_op, _cdc_ts_ms audit cols</text>
+  <text x="858" y="253" text-anchor="middle" font-size="9" fill="#8b949e">+_cdc_op, _cdc_ts_ms, _cdc_processed_at</text>
   <text x="858" y="268" text-anchor="middle" font-size="9" fill="#6e7681">insert_rows_json streaming API</text>
 
   <!-- BigQuery Sink connector path -->
@@ -101,7 +101,7 @@
   <text x="360"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">Terraform (GCP: Cloud Run + BQ)</text>
   <text x="560"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">Kafka UI (monitoring)</text>
   <text x="750"  y="420" text-anchor="middle" font-size="10" fill="#8b949e">pytest (unit tests)</text>
-  <text x="490"  y="428" text-anchor="middle" font-size="9" fill="#6e7681">Postgres 15 | Kafka 7.5 | Debezium 2.5 | Schema Registry | Python 3.11</text>
+  <text x="490"  y="428" text-anchor="middle" font-size="9" fill="#6e7681">Postgres 15 | Confluent 7.5 | Debezium 2.5 | Schema Registry | Python 3.11</text>
 
   <defs>
     <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">

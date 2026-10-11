@@ -16,4 +16,5 @@ dev = ["pytest>=7.4","pytest-cov>=4.1","black>=23.0","flake8>=6.1"]
 line-length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-v --tb=short"
